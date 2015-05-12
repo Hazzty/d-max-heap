@@ -1,5 +1,5 @@
 /*
-	PARENT: i/d
+PARENT: i/d
 */
 #include <iostream>
 #include <vector>
@@ -16,7 +16,7 @@ int parent(int i, int d)
 	if (i == 1 || i == 0)
 		result = 0;
 	else
-		result = (int) (i - 1) / d;
+		result = (int)(i - 1) / d;
 
 	return result;
 }
@@ -28,10 +28,14 @@ int getBiggestChild(Comparable arr[], int parent, int d, int n)
 	int biggestChild = 0;
 
 	for (int i = 1; i < d; i++)
-		if ((child + i < n) && (arr[child + biggestChild] <	arr[child + i])) //Make sure the child is not out of array bounds if so compare size of children.
-			biggestChild = i;
+	{
 
-		return (biggestChild + child);
+		comparisons++;
+		if ((child + i < n) && (arr[child + biggestChild] < arr[child + i]))
+			biggestChild = i;
+	}
+
+	return (biggestChild + child);
 
 }
 
@@ -41,13 +45,13 @@ void buildHeapTopDown(Comparable arr[], int n, int d)
 
 	for (int i = 0; i < n; i++)
 	{
-		int pos = i; 
+		int pos = i;
 
 		while (arr[pos] > arr[parent(pos, d)])
 		{
-				swap(arr[parent(pos, d)], arr[pos]);
-				pos = parent(pos, d);
-				comparisons++;
+			swap(arr[parent(pos, d)], arr[pos]);
+			pos = parent(pos, d);
+			comparisons++;
 		}
 	}
 
@@ -68,15 +72,13 @@ void buildHeapBottomUp(Comparable arr[], int n, int d)
 			int biggestChild = getBiggestChild(arr, parent, d, n);
 
 			/*
-				If one of the children's values ends up being bigger than that of the parent -
-				- swap them. This is not a heap)
-				If all the children are smaller in value than the parent this "branch" is a heap.
+			If one of the children's values ends up being bigger than that of the parent -
+			- swap them. This is not a heap)
+			If all the children are smaller in value than the parent this "branch" is a heap.
 			*/
 			comparisons++;
 			if (arr[biggestChild] > arr[parent])
-			{
 				swap(arr[biggestChild], arr[parent]);
-			}
 			else
 				heap = true;
 
@@ -87,6 +89,28 @@ void buildHeapBottomUp(Comparable arr[], int n, int d)
 	}
 }
 
+template <typename Comparable>
+void siftDown(Comparable arr[], int n, int d)
+{
+	bool isHeap = false;
+	int parent = 0;
+	int child = parent * d + 1;
+
+	while (!isHeap && child < n)
+	{
+		int biggestChild = getBiggestChild(arr, parent, d, n);
+
+		comparisons++;
+		if (arr[biggestChild] > arr[parent])
+			swap(arr[biggestChild], arr[parent]);
+		else
+			isHeap = true;
+
+		parent = biggestChild;
+		child = parent * d + 1;
+
+	}
+}
 
 template <typename Comparable>
 bool checkIfHeap(Comparable arr[], int n, int d)
@@ -103,7 +127,7 @@ void fillArrayWithRandomNumbers(int arr[], int n, int maxValue)
 {
 	srand(time(NULL));
 	for (int i = 0; i < n; i++)
-		arr[i] = rand() % maxValue;
+		arr[i] = rand() * rand() % maxValue;
 }
 
 string intToStr(int i)
@@ -117,21 +141,22 @@ string intToStr(int i)
 
 void testOfTopDownConstructionOfHeap(int arr[], int n, int d)
 {
-
+	comparisons = 0;
 	fillArrayWithRandomNumbers(arr, n, 100000);
 
 	buildHeapTopDown(arr, n, d);
-	cout << "Test of top-down construction where d = " << intToStr(d) << " and n = " << intToStr(n) << endl << "Amount of comparisons: " << comparisons << endl;
+	cout << "Test Top-Down Construction: " << endl << "d = " << intToStr(d) << " n = " << intToStr(n) << " Comparisons: " << comparisons << " Is heap: " << checkIfHeap(arr, n, d) << endl << endl;
 	comparisons = 0;
 
 }
 
 void testOfBottomUpConstructionOfHeap(int arr[], int n, int d)
 {
+	comparisons = 0;
 	fillArrayWithRandomNumbers(arr, n, 100000);
 
 	buildHeapBottomUp(arr, n, d);
-	cout << "Test of bottom-up construction where d = " << intToStr(d) << " and n = " << intToStr(n) << endl << "Amount of comparisons: " << comparisons << endl;
+	cout << "Test Bottom-Up Construction: " << endl << "d = " << intToStr(d) << " n = " << intToStr(n) << " Comparisons: " << comparisons << " Is heap: " << checkIfHeap(arr, n, d) << endl << endl;
 	comparisons = 0;
 }
 
@@ -140,45 +165,64 @@ template <typename Comparable>
 Comparable removeFromHeap(Comparable heap[], int n, int d)
 {
 	int root = heap[0];
-	heap[0] = -1;
+	heap[0] = heap[n - 1];
 
+	siftDown(heap, n, d);
+	heap[n - 1] = root;
 	return root;
 }
 
 template <typename Comparable>
 void sortUsingTopDownConstructionOfHeap(Comparable arr[], int n, int d)
 {
-	fillArrayWithRandomNumbers(arr, n, d);
+	//Fill the array and turn it into a heap
+	fillArrayWithRandomNumbers(arr, n, 100000);
 	buildHeapTopDown(arr, n, d);
-	for (int i = 0; i < n; i++)
-	{
-		removeFromHeap(arr, n, d);
-	}
+	comparisons = 0;
 
+	for (int i = 0; i < n; i++)
+		arr[n - i - 1] = removeFromHeap(arr, n - i, d);
+
+	cout << "Top Down Sort:" << endl << "d = " << intToStr(d) << " n = " << intToStr(n) << " Comparisons: " << intToStr(comparisons) << endl << endl;
 }
 
 template <typename Comparable>
 void sortUsingBottomUpConstructionOfHeap(Comparable arr[], int n, int d)
 {
+	fillArrayWithRandomNumbers(arr, n, 100000);
+	buildHeapBottomUp(arr, n, d);
+	comparisons = 0;
 
+	for (int i = 0; i < n; i++)
+		arr[n - i - 1] = removeFromHeap(arr, n - i, d);
+
+	cout << "Test Bottom-Up Sort: " << endl << "d = " << intToStr(d) << " n = " << intToStr(n) << " Comparisons: " << intToStr(comparisons) << endl << endl;
 }
 
 int main(void)
 {
-	const int n = 50;
-	const int maxValue = 100;
+	const int n = 100000;
+	const int maxValue = 1000000;
 
-	int arr[n];
-	
-	cout << "****** Heap Construction Tests ******" << endl << endl;
+	int sortArr[n];
+	int constructArr[50];
 
-	testOfTopDownConstructionOfHeap(arr, n, 4);
-	testOfBottomUpConstructionOfHeap(arr, n, 4);
+	cout << "***** Heap Construction Tests *****" << endl << endl;
 
-	testOfTopDownConstructionOfHeap(arr, n, 7);
-	testOfBottomUpConstructionOfHeap(arr, n, 7);
+	testOfTopDownConstructionOfHeap(constructArr, 50, 4);
+	testOfBottomUpConstructionOfHeap(constructArr, 50, 4);
 
-	removeFromHeap(arr, n, 7);
+	testOfTopDownConstructionOfHeap(constructArr, 50, 7);
+	testOfBottomUpConstructionOfHeap(constructArr, 50, 7);
+
+	cout << "Heap Sort Tests" << endl << endl;
+	for (int i = 2; i <= 5; i++)
+	{
+		sortUsingTopDownConstructionOfHeap(sortArr, n, i);
+		sortUsingBottomUpConstructionOfHeap(sortArr, n, i);
+	}
+	sortUsingTopDownConstructionOfHeap(sortArr, n, 8);
+	sortUsingBottomUpConstructionOfHeap(sortArr, n, 8);
 
 	getchar();
 	return 0;
